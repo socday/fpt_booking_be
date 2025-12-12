@@ -91,5 +91,19 @@ namespace FPT_Booking_BE.Repositories
                     b.Status != "Cancelled" && b.Status != "Rejected"
                 );
         }
+
+        public async Task<Booking?> GetBookingByIdAsync(int id)
+        {
+            return await _context.Bookings
+                 //.Include(b => b.Purpose)
+                 .Include(b => b.User) 
+                .FirstOrDefaultAsync(b => b.BookingId == id);
+        }
+
+        public async Task UpdateBookingAsync(Booking booking)
+        {
+            _context.Bookings.Update(booking);
+            await _context.SaveChangesAsync();
+        }
     }
 }

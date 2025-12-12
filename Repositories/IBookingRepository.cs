@@ -12,5 +12,8 @@ namespace FPT_Booking_BE.Repositories
         Task<List<int>> GetBookedSlotIds(int facilityId, DateOnly date);
         Task<bool> IsBookingConflict(int facilityId, DateOnly bookingDate, int slotId);
         Task<Booking?> GetConflictingBooking2(int facilityId, DateOnly bookingDate, int slotId);
+
+        Task<Booking?> GetBookingByIdAsync(int id);
+        Task UpdateBookingAsync(Booking booking);
     }
 }

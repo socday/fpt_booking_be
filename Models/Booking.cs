@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FPT_Booking_BE.Models;
 
@@ -44,4 +45,9 @@ public partial class Booking
     public virtual Slot Slot { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
+
+    public int? UpdatedBy { get; set; }
+
+    [ForeignKey("UpdatedBy")]
+    public virtual User? UpdatedByUser { get; set; }
 }

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FPT_Booking_BE")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d02d81ba3dada903b6e58b91a7e3233239a45cdb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b0036ccca8d7df3ebc435a5905732af60a8eea52")]
 [assembly: System.Reflection.AssemblyProductAttribute("FPT_Booking_BE")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FPT_Booking_BE")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

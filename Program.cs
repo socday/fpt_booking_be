@@ -64,6 +64,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddScoped<IFacilityTypeService, FacilityTypeService>();
 
+builder.Services.AddScoped<IAssetService, AssetService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

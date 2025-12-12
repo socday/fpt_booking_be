@@ -19,5 +19,7 @@ namespace FPT_Booking_BE.Services
         Task<object> CreateRecurringBooking(int userId, BookingRecurringRequest request);
 
         Task<string> UpdateRecurringStatus(string recurrenceId, string status);
+
+        Task<bool> StaffCancelBookingAsync(int bookingId, int staffId, string reason);
     }
 }

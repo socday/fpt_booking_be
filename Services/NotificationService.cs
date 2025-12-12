@@ -3,12 +3,6 @@ using FPT_Booking_BE.Repositories;
 
 namespace FPT_Booking_BE.Services
 {
-    public interface INotificationService
-    {
-        Task SendNotification(int userId, string title, string message);
-        Task<IEnumerable<Notification>> GetUserNotifications(int userId);
-    }
-
     public class NotificationService : INotificationService
     {
         private readonly INotificationRepository _repo;
@@ -30,6 +24,16 @@ namespace FPT_Booking_BE.Services
         public async Task<IEnumerable<Notification>> GetUserNotifications(int userId)
         {
             return await _repo.GetMyNotifications(userId);
+        }
+
+        public async Task CreateNotificationAsync(Notification model)
+        {
+            if (model.CreatedAt == null)
+            {
+                model.CreatedAt = DateTime.Now;
+            }
+
+            await _repo.AddNotification(model);
         }
     }
 }

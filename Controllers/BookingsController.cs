@@ -2,8 +2,8 @@ using FPT_Booking_BE.DTOs;
 using FPT_Booking_BE.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Linq; 
+using System.Security.Claims;
 
 namespace FPT_Booking_BE.Controllers
 {
@@ -13,10 +13,12 @@ namespace FPT_Booking_BE.Controllers
     public class BookingsController : ControllerBase
     {
         private readonly IBookingService _bookingService;
+        private readonly INotificationService _notiService;
 
-        public BookingsController(IBookingService bookingService)
+        public BookingsController(IBookingService bookingService, INotificationService notiService)
         {
             _bookingService = bookingService;
+            _notiService = notiService;
         }
 
         [HttpPost]
@@ -154,5 +156,20 @@ namespace FPT_Booking_BE.Controllers
 
             return Ok(new { message = result });
         }
+
+
+        [HttpPut("staff-cancel/{id}")]
+        public async Task<IActionResult> StaffCancelBooking(int id, [FromBody] StaffCancelRequest request)
+        {
+            var result = await _bookingService.StaffCancelBookingAsync(id, request.StaffId, request.Reason);
+
+            if (!result)
+            {
+                return NotFound(new { message = "Không tìm thấy lịch đặt phòng này." });
+            }
+
+            return Ok(new { message = "Đã hủy lịch và gửi thông báo thành công!" });
+        }
+
     }
 }   

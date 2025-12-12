@@ -12,11 +12,21 @@ namespace FPT_Booking_BE.Services
     {
         private readonly FptFacilityBookingContext _context;
         private readonly IBookingRepository _bookingRepo;
+        private readonly INotificationService _notificationService;
+        private readonly ISlotRepository _slotRepo;
 
-        public BookingService(IBookingRepository bookingRepo, FptFacilityBookingContext context)
+
+        public BookingService(
+            IBookingRepository bookingRepo, 
+            FptFacilityBookingContext context,
+            INotificationService notificationService,
+            ISlotRepository slotRepo
+            )
         {
             _bookingRepo = bookingRepo;
             _context = context;
+            _notificationService = notificationService;
+            _slotRepo = slotRepo;
         }
 
         public async Task<string> CreateBooking(int userId, BookingCreateRequest request)
@@ -54,8 +64,14 @@ namespace FPT_Booking_BE.Services
                     //conflictBooking.Note = $"Đã bị hủy bởi {currentUser.Role.RoleName} để ưu tiên sự kiện trường.";
 
                     _context.Bookings.Update(conflictBooking);
-
-                    Console.WriteLine($"[Email Sent] Gửi đến {conflictBooking.User.Email}: Đơn đặt phòng {conflictBooking.BookingId} của bạn đã bị hủy do ưu tiên công việc của nhà trường.");
+                    await _notificationService.CreateNotificationAsync(new Notification
+                    {
+                        UserId = conflictBooking.UserId,
+                        Title = "Lịch đặt bị hủy do ưu tiên",
+                        Message = $"Đơn đặt phòng {conflictBooking.BookingId} của bạn đã bị hủy để ưu tiên cho sự kiện nhà trường.",
+                        CreatedAt = DateTime.Now,
+                        IsRead = false
+                    });
                 }
                 else
                 {
@@ -154,16 +170,35 @@ namespace FPT_Booking_BE.Services
         public async Task<bool> UpdateStatus(int bookingId, string status, string? rejectionReason)
         {
             var booking = await _context.Bookings.FindAsync(bookingId);
-
             if (booking == null) return false;
-
-            if (booking.Status != "Pending")
-            {
-                return false;
-            }
+            if (booking.Status != "Pending") return false;
 
             booking.Status = status;
 
+            if (status == "Rejected")
+            {
+                booking.RejectionReason = rejectionReason;
+
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = booking.UserId,
+                    Title = "Yêu cầu đặt phòng bị từ chối",
+                    Message = $"Yêu cầu số {booking.BookingId} bị từ chối. Lý do: {rejectionReason}",
+                    CreatedAt = DateTime.Now,
+                    IsRead = false
+                });
+            }
+            else if (status == "Approved")
+            {
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = booking.UserId,
+                    Title = "Đặt phòng thành công",
+                    Message = $"Yêu cầu số {booking.BookingId} đã được duyệt.",
+                    CreatedAt = DateTime.Now,
+                    IsRead = false
+                });
+            }
 
             await _context.SaveChangesAsync();
             return true;
@@ -195,6 +230,66 @@ namespace FPT_Booking_BE.Services
 
             return "Success";
         }
+
+        public async Task<bool> StaffCancelBookingAsync(int bookingId, int staffId, string reason)
+        {
+            var booking = await _bookingRepo.GetBookingByIdAsync(bookingId);
+            if (booking == null) return false;
+
+            booking.Status = "Cancelled";       
+            booking.UpdatedBy = staffId;       
+
+            await _bookingRepo.UpdateBookingAsync(booking);
+
+            var noti = new Notification
+            {
+                UserId = booking.UserId, 
+                Title = "Lịch đặt phòng bị hủy",
+                Message = $"Lịch đặt phòng ngày {booking.BookingDate:dd/MM/yyyy} đã bị hủy. Lý do: {reason}",
+                Type = "BookingCancelled",
+                IsRead = false,
+                CreatedAt = DateTime.Now
+            };
+
+            await _notificationService.CreateNotificationAsync(noti);
+
+            return true; 
+        }
+
+        public async Task<bool> StaffModifyBookingAsync(int bookingId, StaffUpdateBookingDto request, int staffId)
+        {
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null) throw new Exception("Không tìm thấy lịch đặt.");
+
+            var conflict = await _bookingRepo.GetConflictingBooking(booking.FacilityId, request.NewDate, request.NewSlotId);
+            if (conflict != null && conflict.BookingId != bookingId) 
+            {
+                throw new Exception("Lịch mới này đã có người đặt rồi, vui lòng chọn giờ khác.");
+            }
+
+            var oldDate = booking.BookingDate;
+
+            booking.BookingDate = request.NewDate;
+            booking.SlotId = request.NewSlotId;
+            booking.UpdatedBy = staffId;
+            booking.UpdatedAt = DateTime.Now;
+            booking.Status = "Approved";
+
+            _context.Bookings.Update(booking);
+            await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotificationAsync(new Notification
+            {
+                UserId = booking.UserId,
+                Title = "Lịch đặt đã được điều chỉnh",
+                Message = $"Lịch của bạn đã được Admin dời từ ngày {oldDate:dd/MM} sang ngày {request.NewDate:dd/MM}. Vui lòng kiểm tra lại.",
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            });
+
+            return true;
+        }
+
 
         public async Task<List<BookingHistoryDto>> GetDailyScheduleForSecurity(int campusId)
         {
@@ -277,6 +372,14 @@ namespace FPT_Booking_BE.Services
                         {
                             conflict.Status = "Cancelled";
                             _context.Bookings.Update(conflict);
+                            await _notificationService.CreateNotificationAsync(new Notification
+                            {
+                                UserId = conflict.UserId,
+                                Title = "Lịch bị hủy do ưu tiên (Định kỳ)",
+                                Message = $"Lịch ngày {dateStr} của bạn bị hủy để ưu tiên.",
+                                CreatedAt = DateTime.Now,
+                                IsRead = false
+                            });
                             canBook = true;
                             note = $"Đã đè lịch của {conflict.User.Email}";
                         }
