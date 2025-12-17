@@ -578,7 +578,7 @@ namespace FPT_Booking_BE.Services
                     FacilityName = b.Facility != null ? b.Facility.FacilityName : "Unknown",
                     CampusName = (b.Facility != null && b.Facility.Campus != null) ? b.Facility.Campus.CampusName : "Unknown",
                     BookingDate = b.BookingDate.ToDateTime(TimeOnly.MinValue),
-                    PriorityLevel = b.PriorityLevel ?? "Low",
+                    PriorityLevel = b.PriorityLevel ?? "Unknown",
                     StartTime = b.Slot != null ? b.Slot.StartTime.ToTimeSpan() : TimeSpan.Zero,
                     EndTime = b.Slot != null ? b.Slot.EndTime.ToTimeSpan() : TimeSpan.Zero,
                     Status = b.Status ?? "Pending",

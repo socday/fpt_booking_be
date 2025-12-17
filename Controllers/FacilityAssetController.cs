@@ -19,8 +19,44 @@ namespace FPT_Booking_BE.Controllers
         public async Task<IActionResult> GetByFacility(int facilityId)
         {
             var data = await _assetService.GetAssetsByFacilityAsync(facilityId);
-
             return Ok(data);
+        }
+
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateFacilityAsset([FromBody] FacilityAssetCreateRequest request)
+        {
+            var (success, message, asset) = await _assetService.CreateFacilityAssetAsync(request);
+
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
+
+            return Ok(new 
+            { 
+                message, 
+                data = asset 
+            });
+        }
+
+        [HttpPut("update-quantity")]
+        public async Task<IActionResult> UpdateQuantity([FromBody] UpdateQuantityRequest request)
+        {
+            try
+            {
+                var result = await _assetService.UpdateQuantityAsync(request.Id, request.Quantity);
+
+                if (!result)
+                {
+                    return NotFound(new { message = "Không tìm thấy tài sản này trong phòng." });
+                }
+
+                return Ok(new { message = "Cập nhật số lượng thành công!" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("update-condition")]
@@ -37,6 +73,4 @@ namespace FPT_Booking_BE.Controllers
             return Ok(new { message = "Cập nhật trạng thái thiết bị thành công!" });
         }
     }
-
-    
 }
