@@ -14,5 +14,8 @@ namespace FPT_Booking_BE.DTOs
         public DateTime CreatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public string? ReportNote { get; set; }
+        public int? BookingId { get; set; }
+        public int? SlotId { get; set; }
+        public string? FacilityName { get; set; }
     }
 }

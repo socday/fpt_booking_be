@@ -33,6 +33,7 @@ namespace FPT_Booking_BE.Services
         public async Task<IEnumerable<SecurityTaskDto>> GetPendingTasksAsync()
         {
             var tasks = await _context.SecurityTasks
+                .Include(t => t.Booking)
                 .Where(t => t.Status != "Completed")
                 .OrderByDescending(t => t.Priority) 
                 .ThenBy(t => t.CreatedAt)
@@ -44,6 +45,7 @@ namespace FPT_Booking_BE.Services
         public async Task<IEnumerable<SecurityTaskDto>> GetAllTasksAsync()
         {
             var tasks = await _context.SecurityTasks
+                .Include(t => t.Booking)         
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
@@ -80,7 +82,10 @@ namespace FPT_Booking_BE.Services
                     CreatedByUserName = createdByUserName,
                     CreatedAt = task.CreatedAt,
                     CompletedAt = task.CompletedAt,
-                    ReportNote = task.ReportNote
+                    ReportNote = task.ReportNote,
+                    BookingId = task.BookingId,
+                    SlotId = task.Booking?.SlotId,
+                    FacilityName = task.Booking?.Facility?.FacilityName ?? "N/A" 
                 });
             }
 

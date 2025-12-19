@@ -909,7 +909,7 @@ namespace FPT_Booking_BE.Services
                     if (canOverride)
                     {
                         conflictDto.CanProceed = true;
-                        conflictDto.Message = $"Có thể đè lịch của {conflict.User.FullName} ({conflict.User.Role.RoleName})";
+                        conflictDto.Message = $"Có thể đè lịch của {conflict.User.FullName} ({conflict.User.Role.RoleName})  {conflict.Slot.SlotName}";
                         response.CanProceedCount++;
                     }
                     else if (request.AutoFindAlternative)
